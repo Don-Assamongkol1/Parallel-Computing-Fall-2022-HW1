@@ -1,52 +1,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #define INFINITY 10000000
-#define MAX_LINE_LENGTH 1000
+#define MAX_LINE_LENGTH 100000
+#define MAX_INT_LENGTH 1000
+#define MAX_STRING_LENGTH 10
+
+typedef struct adj {
+    int N;
+    int **weights;
+} adj_t;
 
 int main() {
     printf("Running Script...\n");
 
     /* make adjacency matrix from reading in input */
+    // adj_t *adjacency_matrix_ = calloc(1, sizeof(adj_t));
+
     FILE *input_file = fopen("sample_input.txt", "r");
     char line[MAX_LINE_LENGTH];
 
     fgets(line, MAX_LINE_LENGTH, input_file);  // reads the first line of the file
     int N = line[0] - '0';                     // cast char to int
 
-    int *adjacency_matrix[N];  // should be N x N to begin with
+    int adjacency_matrix[N][N];
 
     for (int i = 0; i < N; i++) {
-        // read the line, turn it into an int array
-        // int row_array[N];  // I had just this previously, but it didn't work. why?
-        int *row_array = malloc(sizeof(int) * N);  // is the reason that the above not work because row_array variable gets deallocated thus I'm pointing towards nothing?
         fgets(line, MAX_LINE_LENGTH, input_file);
 
-        printf("line: %s\n", line);
-
         char delimeter[] = " ";
-        int row_array_idx = 0;
+        int j = 0;
         char *ptr = strtok(line, delimeter);
         while (ptr != NULL) {
             if (ptr[0] == 'i') {
-                row_array[row_array_idx] = INFINITY;
+                adjacency_matrix[i][j] = INFINITY;
             } else {
-                row_array[row_array_idx] = atoi(ptr);  // convert the ptr str to an int
+                adjacency_matrix[i][j] = atoi(ptr);  // convert the ptr str to an int
             }
             ptr = strtok(NULL, delimeter);
-            row_array_idx += 1;
+            j += 1;
         }
-        adjacency_matrix[i] = row_array;
     }
-    printf("adjacency_matrix[0][0]: %d\n", adjacency_matrix[0][0]);
-    printf("adjacency_matrix[0][1]: %d\n", adjacency_matrix[0][1]);
-    printf("adjacency_matrix[0][2]: %d\n", adjacency_matrix[0][2]);
-    printf("adjacency_matrix[1][0]: %d\n", adjacency_matrix[1][0]);
-    printf("adjacency_matrix[1][1]: %d\n", adjacency_matrix[1][1]);
-    printf("adjacency_matrix[1][2]: %d\n", adjacency_matrix[1][2]);
-    printf("adjacency_matrix[2][0]: %d\n", adjacency_matrix[2][0]);
-    printf("adjacency_matrix[2][1]: %d\n", adjacency_matrix[2][1]);
-    printf("adjacency_matrix[2][2]: %d\n", adjacency_matrix[2][2]);
 
     /* run the algorithm */
     int distances[N][N];
@@ -56,8 +51,6 @@ int main() {
                 distances[u][u] = 0;  // assume that weight of edge to self is 0, this should be what the input file has
             } else {
                 distances[u][v] = adjacency_matrix[u][v];
-                // printf("adjacency_matrix[u][v]: %d\n", adjacency_matrix[u][v]);
-                // printf("distances[u][v]: %d\n", distances[u][v]);
             }
         }
     }
@@ -79,18 +72,21 @@ int main() {
         printf("Error opening output file");
         exit(1);
     }
+
     for (int u = 0; u < N; u++) {
-        // how much space do I need to allocate here? Print neg numbers, print inf?
-        char *str_to_write = malloc(sizeof(char) * (N + 1));
-        // char str_to_write[N + 1];
+        char output_row_weights[MAX_LINE_LENGTH] = "";
 
         for (int v = 0; v < N; v++) {
-            // printf("distances[u][v]: %d\n", distances[u][v]);
-            str_to_write[v] = distances[u][v] + '0';  // distances is an int, convert to char
+            if (distances[u][v] == INFINITY) {
+                strncat(output_row_weights, "i ", MAX_STRING_LENGTH);
+            } else {
+                char buffer[MAX_INT_LENGTH];
+                sprintf(buffer, "%d ", distances[u][v]);
+                strncat(output_row_weights, buffer, MAX_STRING_LENGTH);
+            }
         }
-        str_to_write[N + 1] = '\0';
-        printf("str_to_write: %s\n", str_to_write);
-        fputs(str_to_write, output_file);
+        fputs(output_row_weights, output_file);
+        fputs("\n", output_file);
     }
     fclose(output_file);
 
